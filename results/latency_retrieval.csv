@@ -1,6 +1,6 @@
 ,mean (ms),median (ms),p95 (ms)
-encode_ms,12.59,12.0,16.91
-faiss_ms,0.2,0.2,0.25
-rerank_ms,393.33,380.82,486.84
-pipeline1_ms,12.79,12.19,17.12
-pipeline2_ms,406.12,391.85,499.47
+encode_ms,7.16,6.67,10.17
+faiss_ms,0.15,0.15,0.22
+rerank_ms,35.47,34.13,44.9
+pipeline1_ms,7.31,6.83,10.35
+pipeline2_ms,42.79,40.93,58.58

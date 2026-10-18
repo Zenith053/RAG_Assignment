@@ -1,0 +1,5 @@
+qid,full-corpus CE (s),two-stage (s),slow-down,gold rank (full CE),gold rank (two-stage)
+F3,76.65,0.433,177×,2,1
+F6,75.5,0.551,137×,2,1
+X3,74.58,0.365,204×,9,not in top-10
+G7,75.89,0.798,95×,1,1

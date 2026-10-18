@@ -7,12 +7,12 @@ Two-stage retrieval experiment over a single complex PDF, the **FIDE Arbiters' M
 
 ## Headline results (28 questions, gold clause = verbatim answer text)
 
-| | Hit@1 | Hit@3 | MRR@10 | Recall@10 | Median retrieval latency (CPU) |
+| | Hit@1 | Hit@3 | MRR@10 | Recall@10 | Median retrieval latency |
 |---|---|---|---|---|---|
-| Baseline | 0.393 | 0.536 | 0.521 | 0.893 | 12 ms |
-| Re-ranked | **0.679** | **0.821** | **0.762** | 0.893 | 392 ms |
+| Baseline | 0.393 | 0.536 | 0.521 | 0.893 | 6.8 ms (GPU) |
+| Re-ranked | **0.679** | **0.821** | **0.762** | 0.893 | 40.9 ms (GPU) |
 
-All 7 stress-test queries (keyword traps, exceptions, negations, buried chunks) had the answering chunk at bi-encoder rank 4–8. Re-ranking moved it into the top 3 (to #1 in six). Three counter-examples show where re-ranking hurts or cannot help. Details are in **[REPORT.md](REPORT.md)**.
+All 7 stress-test queries (keyword traps, exceptions, negations, buried chunks) had the answering chunk at bi-encoder rank 4–8. Re-ranking moved it into the top 3 (to #1 in six). With the same generator (Qwen2.5-1.5B), the baseline answered **0/7** stress tests fully correctly and the re-ranked pipeline **4/7**. Three counter-examples show where re-ranking hurts or cannot help. Details are in **[REPORT.md](REPORT.md)**.
 
 ![rank shift](results/rank_shift.png)
 
@@ -28,7 +28,6 @@ results/                          ← CSVs, figure, and LLM answers written by t
 ## Running it
 
 1. Open the notebook in Google Colab (GPU runtime recommended).
-2. Add your Gemini API key as a Colab secret named `GEMINI_API_KEY`. Without a key, the notebook uses a local `Qwen2.5-1.5B-Instruct` instead.
-3. *Runtime → Run all*. The first cell clones this repo if the PDF isn't present.
+2. *Runtime → Run all*. The first cell clones this repo if the PDF isn't present. Answers are generated locally by `Qwen/Qwen2.5-1.5B-Instruct`, so no API key is needed.
 
-Optional environment variables: `GEMINI_MODEL` (default `gemini-flash-latest`), `LLM_BACKEND` (`gemini` | `hf` | `none`), `LOCAL_MODEL_DIR` (load the two encoders from a local folder).
+Optional environment variables: `LLM_BACKEND` (`hf` default | `gemini` with a `GEMINI_API_KEY` secret | `none`), `GEMINI_MODEL`, `LOCAL_MODEL_DIR` (load the two encoders from a local folder).

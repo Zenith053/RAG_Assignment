@@ -10,7 +10,7 @@
 | Cross-encoder | `cross-encoder/ms-marco-MiniLM-L-6-v2` (6 layers, max 512 tokens) |
 | Pipeline 1 | top-10 by cosine → first 3 → LLM → *Answer 1* |
 | Pipeline 2 | same top-10 → cross-encoder scores → re-sorted → top 3 → LLM (identical prompt) → *Answer 2* |
-| Generator | Gemini Flash (`gemini-flash-latest`, temperature 0), with fallback to local `Qwen2.5-1.5B-Instruct` |
+| Generator | `Qwen/Qwen2.5-1.5B-Instruct` (local open-weights, greedy decoding), run on a Colab GPU |
 | Evaluation | 28 hand-written questions, each with a verbatim **gold clause** from the manual: 7 failure queries (F1–F7), 3 counter-examples (X1–X3), 18 general queries (G1–G18) |
 
 ---
@@ -71,13 +71,13 @@ Recall@10 is identical by construction: re-ranking only permutes the same 10 can
 
 ### 2.3 What each pipeline hands the LLM, and what that does to the answer
 
-The prompt tells the LLM to answer **only** from the three passages. So when the clause is missing, the best case is "the context does not contain this", and the realistic failure is an answer stitched together from neighbouring rules. The verbatim Answer 1 / Answer 2 pairs are produced by notebook §11 and saved to `results/answer_comparison.md`.
+The prompt tells the LLM to answer **only** from the three passages. So when the clause is missing, the best case is "the context does not contain this", and the realistic failure is an answer stitched together from neighbouring rules. This section explains what each pipeline put in the context. §2.4 shows what the generator actually answered (full text in `results/answer_comparison.md`).
 
 **F1 (keyword trap).** The baseline top-3 is Appendix A (rapid scoresheets), Art. 6.8 ("a flag is considered to have fallen when the *arbiter* observes the fact or when *either player* has made a valid claim") and Art. 12.6 ("the arbiter must not intervene… shall refrain from informing a player…"). The query says "time has run out", but the manual says "flag fall". The baseline context lists only the arbiter and the players as people who can establish a flag fall, so it invites the **wrong answer "no"**. Re-ranked #1 is Art. 12.7 with its commentary: *"If a spectator sees a flag fall, or any other offence, they should tell the arbiter"*. Spectators may inform the arbiter but must not interfere.
 
 **F2 (distractor).** All three baseline chunks share the query's vocabulary ("mobile phone", "player", "venue"): Art. 11.3.2 commentary that a phone found on a player means **immediate loss**, the zero-tolerance example, and the online-chess device rule. A baseline answer is pushed towards **"no, the player loses the game"**. The actual answer is phrased with different words ("store his/her *device*") in chunk #96: a late-arriving player *should be given the opportunity to store the device before playing their first move*. It was rank #4 and becomes #1.
 
-**F3 (exception).** The baseline gives the general rules: touch-move (Art. 4.3) and the threefold-repetition claim procedure (Art. 9.2). Both say nothing about losing the right to claim, so Answer 1 can at best **omit the restriction** and at worst say "yes, the player having the move may claim". Re-ranked context contains Art. 9.4 (*"If the player touches a piece as in Article 4.3, he/she loses the right to claim a draw under Article 9.2 or 9.3 on that move"*) plus a worked exam answer saying the same.
+**F3 (exception).** The baseline gives the general rules: touch-move (Art. 4.3) and the threefold-repetition claim procedure (Art. 9.2). Both say nothing about losing the right to claim, so Answer 1 can at best **omit the restriction** and at worst say "yes, the player having the move may claim". Re-ranked context contains Art. 9.4 (*"If the player touches a piece as in Article 4.3, he/she lose the right to claim a draw under Article 9.2 or 9.3 on that move"*) plus a worked exam answer saying the same.
 
 **F4 (penalty).** Baseline chunk #88 contains commentary on a *different* case: *"If the player loses the right to claim in this way it is not a wrong claim and is not punished as such. The arbiter may decide to award the opponent extra time."* That is a direct route to a **misstated rule** ("incorrect claims are not punished; extra time is optional"). Art. 9.5.3, *"the arbiter shall add two minutes to the opponent's remaining thinking time"*, enters only after re-ranking.
 
@@ -87,9 +87,35 @@ The prompt tells the LLM to answer **only** from the three passages. So when the
 
 **F7 (buried).** The baseline gives generic flag-fall commentary. The specific rule, Guideline III.3.1 (*game continues if this happens in any period except the last; drawn if it happens in the final period*), is at #7. Without it Answer 1 has nothing to go on (likely **"not covered" or a guess**). After re-ranking it is #1.
 
-### 2.4 Where re-ranking does not help (counter-examples)
+### 2.4 Answer 1 vs. Answer 2: actual LLM outputs
 
-* **X1, rapid flag fall.** The bi-encoder has A.5.5 (*"The arbiter shall also call a flag fall, if he/she observes it"*) at #2. The cross-encoder prefers Guideline III (quick-play finishes) and standard-chess commentary, and pushes A.5.5 to #4. MS-MARCO training rewards topical overlap with "flag" and "arbiter", and does not know that "rapid" should select Appendix A.
+Generator: `Qwen2.5-1.5B-Instruct`, identical prompt, greedy decoding. Key: ✅ correct and grounded in the context · ⚠️ right conclusion but wrong reasoning or citation · ❌ wrong, hallucinated or missing.
+
+| Query | Answer 1 (baseline) | Answer 2 (re-ranked) | Outcome |
+|---|---|---|---|
+| F1 spectator | ❌ *"only the arbiter or a player making a valid claim can determine…"*: **misstated rule** | ❌ *"spectators are not allowed to interfere… should not announce it"* | Gold passage was #1, but the generator conflated "interfere" with "inform" |
+| F2 late phone | ❌ *"No… it would still be considered a violation and lead to losing the game"*: **distractor wins** | ⚠️ *"Yes"*, the correct conclusion, but it cites an online "mobile device for connection" rule | Partial win |
+| F3 touch → repetition | ⚠️ *"No"*, reasoned from touch-move Art. 4.3.2 (**right for the wrong reason**) | ✅ *"No… Rule 9.4… lose the right to claim a draw under Article 9.2 or 9.3 on that move"* | Win |
+| F4 incorrect claim | ❌ *"The provided context does not contain this information"*: **omission** | ❌ *"There are no specific penalties mentioned"*, although Art. 9.5.3 (two minutes) was Passage 2 | Generator failure |
+| F5 round-robin | ❌ *"tie-breaks listed in Article 5 cannot be used"*: **hallucination** | ✅ Buchholz, Average of Opponents' Buchholz, Fore Buchholz | Clean win |
+| F6 neither keeps score | ❌ generic "record the correct result" answer; **omits** pausing the clock | ✅ *"the arbiter shall pause the chessclock. Both players shall update their scoresheets"* | Clean win |
+| F7 both flags | ❌ invents a 5-step procedure (check position, pause clocks, "determine which flag fell first"): **hallucination** | ✅ quotes III.3.1.1 / III.3.1.2 correctly; its closing "therefore drawn" over-generalises | Win |
+| X1 rapid flag fall | ✅ *"the arbiter must call a flag fall if they observe it"* (A.5.5) | ❌ attaches Guideline III.3.1 to the question | **Re-ranking made the answer worse** |
+| X2 online smoking | ❌ answers with the over-the-board rule ("designated section") | ❌ *"No"*, with an unrelated justification | Both wrong |
+| X3 draw before moves | ⚠️ *"No"*, citing Art. 9.1.2.3 | ⚠️ *"No"*, citing Art. 9.1.1 | Right conclusion by luck: Art. 5.2.3 never reached either context |
+
+**Scorecard on the seven stress tests:**
+
+| | Fully correct ✅ | Right conclusion, wrong grounding ⚠️ | Wrong ❌ |
+|---|---|---|---|
+| Answer 1 (baseline) | **0** | 1 (F3) | 6 |
+| Answer 2 (re-ranked) | **4** (F3, F5, F6, F7) | 1 (F2) | 2 (F1, F4) |
+
+> **Key finding:** re-ranking put the answering clause into the context in **7 of 7** stress tests, and the baseline produced **no** fully correct answer. Every baseline failure is one of the types the assignment asks about: a misstated rule (F1), the distractor winning (F2), an omission (F4, F6) and hallucinations (F5, F7). **But better retrieval is necessary, not sufficient.** In F1 and F4 the right passage was in the prompt and the 1.5B generator still got it wrong. It read *"spectators are not allowed to interfere"* as *"may not tell the arbiter"*, and it skipped Art. 9.5.3 in favour of the draw-offer passage ranked above it. Re-ranking removes the *cause* of these hallucinations (missing evidence); a stronger generator is needed to use the evidence reliably.
+
+### 2.5 Where re-ranking does not help (counter-examples)
+
+* **X1, rapid flag fall.** The bi-encoder has A.5.5 (*"The arbiter shall also call a flag fall, if he/she observes it"*) at #2. The cross-encoder prefers Guideline III (quick-play finishes) and standard-chess commentary, and pushes A.5.5 to #4. MS-MARCO training rewards topical overlap with "flag" and "arbiter", and does not know that "rapid" should select Appendix A. **This changed the outcome:** Answer 1 was correct and Answer 2 was wrong.
 * **X2, online smoking.** The bi-encoder has the online rule at #1. The cross-encoder prefers the over-the-board smoking/phone passage (#96). The context cue "online … with supervision" loses to "smoke".
 * **X3, recall failure.** The answer, Art. 5.2.3 (*"provided both players have made at least one move"*), is bi-encoder rank #64. **A re-ranker cannot recover what the first stage never retrieved.** Two other general queries (G14, G15) fail the same way.
 
@@ -99,21 +125,27 @@ The prompt tells the LLM to answer **only** from the three passages. So when the
 
 ## 3. Latency profiling
 
-28 queries × 5 repetitions after warm-up. The run used a 2-vCPU cloud machine **without a GPU**; on a Colab GPU every model stage is much faster, and the notebook re-measures on whatever hardware it runs on.
+28 queries × 5 repetitions after warm-up, measured on two machines: a 2-vCPU cloud machine without a GPU, and a **Google Colab GPU** runtime (the run that produced the answers).
 
-| Stage | Mean (ms) | Median (ms) | p95 (ms) |
+| Stage (median ms) | CPU | **Colab GPU** |
+|---|---|---|
+| Query encoding (bi-encoder) | 12.0 | **6.7** |
+| FAISS search (1,005 × 384, exact) | 0.2 | **0.15** |
+| **Pipeline 1: retrieval** | **12.2** | **6.8** |
+| Cross-encoder scoring of 10 pairs + sort | 380.8 | **34.1** |
+| **Pipeline 2: retrieval + re-rank** | **391.9** | **40.9** |
+| Re-ranking overhead | 32× | **6×** |
+| p95, Pipeline 1 / Pipeline 2 | 17.1 / 499.5 | **10.4 / 58.6** |
+
+| End-to-end on GPU (mean) | Retrieval | LLM generation (Qwen 1.5B) | Total |
 |---|---|---|---|
-| Query encoding (bi-encoder) | 12.6 | 12.0 | 16.9 |
-| FAISS search (1,005 × 384, exact) | 0.2 | 0.2 | 0.3 |
-| **Pipeline 1 total (retrieval)** | **12.8** | **12.2** | **17.1** |
-| Cross-encoder scoring of 10 pairs + sort | 393.3 | 380.8 | 486.8 |
-| **Pipeline 2 total (retrieval + re-rank)** | **406.1** | **391.9** | **499.5** |
+| Pipeline 1 → Answer 1 | 0.007 s | 4.79 s | ≈ 4.8 s |
+| Pipeline 2 → Answer 2 | 0.043 s | 4.03 s | ≈ 4.1 s |
 
-One-off cost: embedding and indexing all 1,005 chunks took 37 s.
-
-* Re-ranking makes retrieval **≈32× slower** (median). Almost all of it is the 10 cross-encoder passes: up to 512 tokens each, and attention cost grows quadratically with length.
-* In absolute terms it adds about 0.4 s on CPU (a few tens of ms on GPU). That is small next to LLM generation, which typically takes about a second or more per answer. Generation time is logged per answer in §11 (`llm_s_1`, `llm_s_2`).
+* Re-ranking makes **retrieval** 6× slower on GPU and 32× slower on CPU. Almost all of that is the 10 cross-encoder passes: up to 512 tokens each, and attention cost grows quadratically with length. The GPU parallelises those passes, which shrinks the gap.
+* **Measured end to end, the extra 34 ms is under 1% of the time to answer a question.** LLM generation dominates (about 4–5 s per answer). Answer 2 was actually generated slightly faster on average, probably because answers grounded in better context were shorter (Answer 1 for F7, for instance, invented a 5-step procedure).
 * FAISS search is negligible. Bi-encoder retrieval time is dominated by encoding the query.
+* One-off cost: embedding and indexing all 1,005 chunks (37 s on CPU, a few seconds on GPU).
 
 ---
 
@@ -123,14 +155,14 @@ One-off cost: embedding and indexing all 1,005 chunks took 37 s.
 
 **2. Measured on this corpus** (notebook §13):
 
-| Query | Full-corpus cross-encoder (1,005 pairs) | Retrieve-10 + re-rank | Slow-down | Gold rank, full CE | Gold rank, two-stage |
-|---|---|---|---|---|---|
-| F3 | 76.7 s | 0.43 s | 177× | #2 | #1 |
-| F6 | 75.5 s | 0.55 s | 137× | #2 | #1 |
-| X3 | 74.6 s | 0.37 s | 204× | #9 | not in top-10 |
-| G7 | 75.9 s | 0.80 s | 95× | #1 | #1 |
+| Query | Full-corpus CE, CPU | Full-corpus CE, **GPU** | Two-stage, GPU | Slow-down (GPU) | Gold rank, full CE | Gold rank, two-stage |
+|---|---|---|---|---|---|---|
+| F3 | 76.7 s | **5.00 s** | 0.042 s | 120× | #2 | #1 |
+| F6 | 75.5 s | **5.09 s** | 0.042 s | 120× | #2 | #1 |
+| X3 | 74.6 s | **5.05 s** | 0.041 s | 123× | #9 | not in top-10 |
+| G7 | 75.9 s | **4.97 s** | 0.061 s | 81× | #1 | #1 |
 
-That is about 75 ms per pair on this CPU. Cost is linear in N: at 1 million chunks it would be roughly 21 hours per query on this machine. Even a GPU at a few thousand pairs per second would take minutes per query. Two-stage retrieval keeps the expensive model's cost fixed at k = 10 pairs, whatever the corpus size.
+On CPU it costs about 75 ms per pair, and about **5 ms per pair even on GPU**. Cost is linear in N: at 1 million chunks a single query would take about **83 minutes on the GPU** (about 21 hours on CPU). A bi-encoder with an ANN index answers in milliseconds. Two-stage retrieval keeps the expensive model's cost fixed at k = 10 pairs, whatever the corpus size.
 
 **3. It isn't even clearly better.** For F3 and F6, full-corpus scoring ranked the gold chunk #2, whereas the two-stage pipeline ranked it #1. With 1,000 candidates there are more look-alike distractors that the cross-encoder over-scores. The bi-encoder stage acts as a cheap semantic filter. For X3 the full-corpus cross-encoder reaches the gold chunk only at #9, so brute force does not solve that recall problem either.
 
@@ -140,7 +172,8 @@ That is about 75 ms per pair on this CPU. Cost is linear in N: at 1 million chun
 
 ## 5. Limitations and reproducibility notes
 
+* **Small generator.** Answers come from a 1.5B-parameter model, chosen because it runs locally and freely. Its reading errors (F1, F4) cap the answer-level gains. A larger model would likely turn more retrieval wins into correct answers, while the retrieval results themselves would not change.
 * **Query selection bias.** The failure queries were found by probing the manual for cases where the baseline stumbles, as the assignment asks. Treat the "all queries" metrics as illustrative. The 18 general queries are the fairer sample, but they are still small and hand-written.
 * **Gold labels are phrase-based.** A chunk counts as relevant if it contains the verbatim answering clause. Paraphrased versions elsewhere could be missed. Two labels (X2, G14) were widened after inspection for exactly this reason.
 * **One chunking configuration.** 180/40 words gives a median of 240 tokens, and 24% of chunks exceed the bi-encoder's 256-token window and lose their tail. None of the gold clauses are affected, but structure-aware chunking would likely raise baseline recall (X3, G14, G15).
-* **Model weights.** The retrieval numbers above were produced on an offline machine, using copies of the same two checkpoints: the cross-encoder converted from its official ONNX export, and the bi-encoder from an fp16 copy. Both were checked against reference outputs (cosine 0.7553 on the sentence-transformers example; logits within 1e-5 of ONNX). In Colab the notebook loads the originals from Hugging Face, so near-tie ranks could differ in the last decimal.
+* **Reproducibility.** The CPU numbers were first produced offline, using copies of the same two checkpoints. The Colab run with the official Hugging Face weights reproduced every rank, rank shift and metric exactly; similarity scores differed only in the 4th–5th decimal.
