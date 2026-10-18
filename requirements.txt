@@ -1,0 +1,8 @@
+sentence-transformers>=3.0
+transformers>=4.56
+torch
+faiss-cpu
+pymupdf
+google-genai
+pandas
+matplotlib

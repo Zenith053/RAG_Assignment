@@ -1,0 +1,29 @@
+qid,category,query,gold_chunk,clause_token_pos,page,bi_rank,ce_rank,baseline_top3_has_gold,rerank_top3_has_gold,baseline_top3,rerank_top3,shift
+F1,Keyword trap / synonym,Can a spectator tell the arbiter that a player's time has run out?,102,199,38,5,1,False,True,"[105, 56, 101]","[102, 55, 947]",#5 → #1
+F2,Keyword trap / distractor,Can a player who arrives late still store their mobile phone before playing?,96,120,36,4,1,False,True,"[95, 94, 873]","[96, 95, 881]",#4 → #1
+F3,Exception / corner case,Can a player claim threefold repetition after touching a piece?,952,21,337,7,1,False,True,"[33, 82, 81]","[952, 87, 81]",#7 → #1
+F4,Exception / penalty,What is the penalty for an incorrect draw claim?,87,120,33,6,2,False,True,"[81, 85, 88]","[84, 87, 85]",#6 → #2
+F5,Negation / constraint,Which tie-breaks must not be used in round-robin tournaments?,722,6,251,5,1,False,True,"[714, 715, 713]","[722, 714, 715]",#5 → #1
+F6,Buried (rank 4-10),What happens if neither player keeps score in time trouble and a flag falls?,75,76,29,8,1,False,True,"[43, 78, 49]","[75, 45, 78]",#8 → #1
+F7,Buried (rank 4-10),What should the arbiter do if both flags have fallen and it is impossible to tell which fell first?,136,44,52,7,1,False,True,"[58, 78, 102]","[136, 58, 52]",#7 → #1
+X1,Counter: CE demotes gold,When must the arbiter call a flag fall in rapid chess?,109,145,41,2,4,True,False,"[58, 109, 52]","[136, 58, 77]",#2 → #4
+X2,Counter: CE demotes gold,Can a player smoke during an online game with supervision?,875,117,307,1,4,True,False,"[875, 94, 96]","[96, 867, 3]",#1 → #4
+X3,Counter: recall ceiling,Can two players agree a draw before any moves have been made?,42,76,19,64,,False,False,"[84, 85, 80]","[81, 85, 79]",#64 → (not in top-10)
+G1,General,Is the arbiter allowed to tell a player how many moves remain until the time control?,77,59,30,3,1,True,True,"[105, 138, 77]","[77, 55, 138]",#3 → #1
+G2,General,Is a player allowed to castle after deliberately touching the rook first and then the king?,35,125,16,1,1,True,True,"[35, 37, 30]","[35, 37, 132]",#1 → #1
+G3,General,Can two participants in a Swiss tournament play each other twice?,320,122,115,2,1,True,True,"[372, 320, 521]","[320, 372, 476]",#2 → #1
+G4,General,Is the arbiter allowed to inform a player that the opponent has completed a move?,102,24,38,1,1,True,True,"[102, 98, 105]","[102, 862, 86]",#1 → #1
+G5,General,Can a draw offer have conditions attached?,84,61,32,1,1,True,True,"[84, 79, 80]","[84, 79, 80]",#1 → #1
+G6,General,Can a draw offer be withdrawn?,80,11,31,1,1,True,True,"[80, 84, 865]","[80, 79, 865]",#1 → #1
+G7,General,What K-factor applies to a junior player rated 2250?,577,91,191,1,1,True,True,"[577, 575, 590]","[577, 576, 636]",#1 → #1
+G8,General,How old must an applicant for the International Arbiter title be?,775,160,270,2,2,True,True,"[986, 775, 773]","[773, 775, 769]",#2 → #2
+G9,General,What is the minimum age to apply for the FIDE Arbiter title?,774,187,269,6,3,False,True,"[773, 775, 982]","[773, 775, 774]",#6 → #3
+G10,General,What happens if a sealed move is recorded ambiguously?,128,78,48,1,1,True,True,"[128, 129, 126]","[128, 130, 129]",#1 → #1
+G11,General,Is a player allowed to wear headphones while playing an online game?,873,40,307,1,1,True,True,"[873, 872, 887]","[873, 892, 872]",#1 → #1
+G12,General,Is the player allowed to keep the original scoresheet?,75,13,29,1,1,True,True,"[75, 73, 74]","[75, 74, 73]",#1 → #1
+G13,General,"In rapid chess, how many times may a player ask to see the scoresheet?",105,181,40,8,2,False,True,"[104, 674, 76]","[107, 105, 104]",#8 → #2
+G14,General,How much extra time does the opponent get for an illegal move in rapid chess?,109,215,41,11,,False,False,"[104, 106, 111]","[106, 104, 136]",#11 → (not in top-10)
+G15,General,Can the clock setting be changed after ten moves in a rapid game?,107,170,40,19,,False,False,"[54, 61, 49]","[49, 903, 62]",#19 → (not in top-10)
+G16,General,Is a player who makes two illegal moves in standard chess forfeited?,70,1,28,1,1,True,True,"[70, 32, 69]","[70, 69, 950]",#1 → #1
+G17,General,Must a player keep writing down the moves when they have less than five minutes left?,73,164,29,5,1,False,True,"[105, 49, 77]","[73, 105, 136]",#5 → #1
+G18,General,Where is smoking permitted in an over-the-board tournament?,94,33,36,4,1,True,True,"[875, 683, 96]","[94, 875, 683]",#4 → #1

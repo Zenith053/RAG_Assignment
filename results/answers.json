@@ -1,0 +1,86 @@
+{
+  "backend": "none",
+  "model": "Qwen/Qwen2.5-1.5B-Instruct",
+  "answers": [
+    {
+      "qid": "F1",
+      "query": "Can a spectator tell the arbiter that a player's time has run out?",
+      "answer_1_baseline": null,
+      "answer_2_reranked": null,
+      "llm_s_1": 0.0,
+      "llm_s_2": 0.0
+    },
+    {
+      "qid": "F2",
+      "query": "Can a player who arrives late still store their mobile phone before playing?",
+      "answer_1_baseline": null,
+      "answer_2_reranked": null,
+      "llm_s_1": 0.0,
+      "llm_s_2": 0.0
+    },
+    {
+      "qid": "F3",
+      "query": "Can a player claim threefold repetition after touching a piece?",
+      "answer_1_baseline": null,
+      "answer_2_reranked": null,
+      "llm_s_1": 0.0,
+      "llm_s_2": 0.0
+    },
+    {
+      "qid": "F4",
+      "query": "What is the penalty for an incorrect draw claim?",
+      "answer_1_baseline": null,
+      "answer_2_reranked": null,
+      "llm_s_1": 0.0,
+      "llm_s_2": 0.0
+    },
+    {
+      "qid": "F5",
+      "query": "Which tie-breaks must not be used in round-robin tournaments?",
+      "answer_1_baseline": null,
+      "answer_2_reranked": null,
+      "llm_s_1": 0.0,
+      "llm_s_2": 0.0
+    },
+    {
+      "qid": "F6",
+      "query": "What happens if neither player keeps score in time trouble and a flag falls?",
+      "answer_1_baseline": null,
+      "answer_2_reranked": null,
+      "llm_s_1": 0.0,
+      "llm_s_2": 0.0
+    },
+    {
+      "qid": "F7",
+      "query": "What should the arbiter do if both flags have fallen and it is impossible to tell which fell first?",
+      "answer_1_baseline": null,
+      "answer_2_reranked": null,
+      "llm_s_1": 0.0,
+      "llm_s_2": 0.0
+    },
+    {
+      "qid": "X1",
+      "query": "When must the arbiter call a flag fall in rapid chess?",
+      "answer_1_baseline": null,
+      "answer_2_reranked": null,
+      "llm_s_1": 0.0,
+      "llm_s_2": 0.0
+    },
+    {
+      "qid": "X2",
+      "query": "Can a player smoke during an online game with supervision?",
+      "answer_1_baseline": null,
+      "answer_2_reranked": null,
+      "llm_s_1": 0.0,
+      "llm_s_2": 0.0
+    },
+    {
+      "qid": "X3",
+      "query": "Can two players agree a draw before any moves have been made?",
+      "answer_1_baseline": null,
+      "answer_2_reranked": null,
+      "llm_s_1": 0.0,
+      "llm_s_2": 0.0
+    }
+  ]
+}
